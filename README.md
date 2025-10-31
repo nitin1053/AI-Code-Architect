@@ -46,6 +46,4 @@ This project demonstrates:
 - Production-ready code architecture
 - Comprehensive feature set
 
-## License
 
-MIT

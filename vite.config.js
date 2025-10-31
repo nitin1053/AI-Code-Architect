@@ -7,5 +7,5 @@ export default defineConfig({
     port: 3000,
     open: true
   },
-  base: process.env.NODE_ENV === 'production' ? '/grok_ai_application/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/AI-Code-Architect/' : '/',
 })

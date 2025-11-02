@@ -1,51 +1,154 @@
 import axios from 'axios'
 
-const GROK_API_URL = 'https://api.x.ai/v1/chat/completions'
+// Groq API endpoint (OpenAI-compatible)
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
-class GrokApiService {
+class GroqApiService {
   constructor() {
-    this.apiKey = import.meta.env.VITE_GROK_API_KEY
+    this.apiKey = import.meta.env.VITE_GROQ_API_KEY
     if (!this.apiKey) {
-      console.warn('Grok API key not found. Using demo mode.')
+      console.warn('Groq API key not found. Using demo mode.')
     }
   }
 
   async makeRequest(prompt, systemMessage = '') {
-    // Using demo mode for now - Grok API model name needs verification
+    // If no API key, use demo mode as fallback
     if (!this.apiKey) {
+      console.warn('No API key found. Using demo mode.')
       return this.getDemoResponse(prompt, systemMessage)
     }
 
-    // Uncomment below when Grok API model is confirmed
-    return this.getDemoResponse(prompt, systemMessage)
-
-    /* Grok API Integration (disabled for demo mode)
-    try {
-      const response = await axios.post(
-        GROK_API_URL,
-        {
-          model: 'grok-beta', // Update with correct model name from Grok docs
-          messages: [
-            ...(systemMessage ? [{ role: 'system', content: systemMessage }] : []),
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 4000,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      )
-
-      return response.data.choices[0].message.content
-    } catch (error) {
-      console.error('Grok API Error:', error.response?.data || error.message)
-      throw new Error(error.response?.data?.error?.message || 'Failed to get AI response')
+    // Validate inputs
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      throw new Error('Prompt cannot be empty')
     }
-    */
+
+    // Build messages array - ensure all messages have content
+    const messages = []
+    if (systemMessage && typeof systemMessage === 'string' && systemMessage.trim().length > 0) {
+      messages.push({ role: 'system', content: systemMessage.trim() })
+    }
+    messages.push({ role: 'user', content: prompt.trim() })
+
+    // Try common Groq model names in order (updated to current available models)
+    // Groq offers fast inference with models like Llama, Mixtral, Gemma
+    // See https://console.groq.com/docs/models for full list
+    // Note: llama-3.1-70b-versatile has been decommissioned
+    const modelNames = [
+      'llama-3.1-8b-instant',        // Fast and efficient (most commonly available)
+      'llama-3-70b-8192',            // Alternative Llama variant
+      'mixtral-8x7b-32768',          // High context window
+      'gemma-7b-it',                 // Google's Gemma model
+      'llama-3-8b-8192',             // Smaller Llama variant
+      'mixtral-8x7b-instruct-v0.1'   // Mixtral instruction-tuned
+    ]
+    
+    let lastError = null
+    
+    for (const model of modelNames) {
+      // Adjust max_tokens based on model (some models have limits)
+      // For llama-3.1-70b, max_tokens should be <= 8192
+      // Using a safe default that works with all models
+      const maxTokens = model.includes('70b') ? 2048 : 4096
+      
+      const requestPayload = {
+        model: model,
+        messages: messages,
+        temperature: 0.7,
+        max_tokens: maxTokens,
+        stream: false, // Explicitly set to false for non-streaming
+      }
+
+      console.log(`Attempting Groq API call with model: ${model}, max_tokens: ${maxTokens}`)
+      
+      try {
+        
+        const response = await axios.post(
+          GROQ_API_URL,
+          requestPayload,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 30000, // 30 second timeout
+          }
+        )
+
+        if (response.data && response.data.choices && response.data.choices[0]) {
+          const content = response.data.choices[0].message?.content
+          if (content) {
+            console.log(`Successfully received response from model: ${model}`)
+            return content
+          }
+        }
+        
+        throw new Error('Invalid response format from API')
+      } catch (error) {
+        lastError = error
+        
+        // Enhanced error logging
+        console.error(`Groq API Error for model ${model}:`, {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        })
+        
+        // If it's not a 404, the model exists but there's another issue
+        if (error.response?.status !== 404) {
+          if (error.response?.status === 401 || error.response?.status === 403) {
+            const authError = error.response?.data?.error?.message || 
+                            error.response?.data?.message ||
+                            error.response?.data?.error?.code ||
+                            'Invalid API key or insufficient permissions'
+            const fullError = error.response?.data ? JSON.stringify(error.response.data, null, 2) : authError
+            console.error('Full API error response:', fullError)
+            throw new Error(`Authentication failed (${error.response?.status}): ${authError}. Your Groq API key may not have access to model "${model}". Please check https://console.groq.com/docs/models for available models.`)
+          }
+          // For 400 errors, check if model is decommissioned or invalid
+          if (error.response?.status === 400) {
+            const errorData = error.response?.data
+            const apiError = errorData?.error?.message || 
+                           errorData?.message || 
+                           (errorData?.error ? JSON.stringify(errorData.error, null, 2) : JSON.stringify(errorData, null, 2))
+            
+            // Check if model is decommissioned - try next model instead of failing
+            if (apiError.toLowerCase().includes('decommissioned') || 
+                apiError.toLowerCase().includes('no longer supported')) {
+              console.warn(`Model ${model} is decommissioned, trying next model...`)
+              lastError = error
+              continue // Try next model
+            }
+            
+            console.error('Groq API 400 Error Details:', apiError)
+            console.error('Request payload that failed:', JSON.stringify(requestPayload, null, 2))
+            // If it's a different 400 error (not decommissioned), don't try other models
+            throw new Error(`API request error (model: ${model}): ${apiError}`)
+          }
+          // If we get a different error and it's not a model-not-found (404), don't try other models
+          throw new Error(error.response?.data?.error?.message || error.message || 'Failed to get AI response')
+        }
+        // If 404, try next model name
+        continue
+      }
+    }
+
+    // If all models failed, throw an error with details
+    if (lastError) {
+      // Check if all errors were 403 (permission issues)
+      if (lastError.response?.status === 403) {
+        throw new Error(`API access denied (403): Your Groq API key doesn't have access to any of the models we tried. Please check:
+1. Your Groq console (https://console.groq.com) to see which models your API key has access to
+2. Your API key permissions in the Groq dashboard
+3. Whether the models need to be enabled in your account settings
+4. Check https://console.groq.com/docs/models for the correct model names
+
+Last attempted model: ${modelNames[modelNames.length - 1]}`)
+      }
+      throw new Error(`No valid Groq model found. Last error: ${lastError.message}`)
+    }
+    throw new Error('No valid Groq model found. Please verify your API access and model availability.')
   }
 
   getDemoResponse(prompt, systemMessage) {
@@ -291,4 +394,4 @@ Would you like me to generate specific code examples for any of these recommenda
   }
 }
 
-export default new GrokApiService()
+export default new GroqApiService()

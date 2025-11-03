@@ -392,6 +392,30 @@ Would you like me to generate specific code examples for any of these recommenda
     const prompt = `Generate ${framework} tests for this code:\n\n\`\`\`${code}\`\`\``
     return this.makeRequest(prompt, systemMessage)
   }
+
+  async refactorCode(code, language = 'javascript') {
+    const systemMessage = `You are an expert code refactoring assistant. Analyze the provided code and refactor it to be cleaner, more efficient, and maintainable. Apply best practices and design patterns.`
+    const prompt = `Refactor this ${language} code and explain all improvements:\n\n\`\`\`${language}\n${code}\n\`\`\``
+    return this.makeRequest(prompt, systemMessage)
+  }
+
+  async scanSecurity(code, language = 'javascript') {
+    const systemMessage = `You are a cybersecurity expert specializing in secure coding practices. Analyze the provided code for security vulnerabilities including SQL injection, XSS, authentication flaws, sensitive data exposure, and other OWASP Top 10 issues. Provide severity levels and specific fixes.`
+    const prompt = `Perform a comprehensive security scan on this ${language} code:\n\n\`\`\`${language}\n${code}\n\`\`\``
+    return this.makeRequest(prompt, systemMessage)
+  }
+
+  async explainCode(code, language = 'javascript', complexity = 'detailed') {
+    const complexityPrompts = {
+      simple: 'Explain this code in simple, beginner-friendly terms. Use analogies and avoid technical jargon.',
+      detailed: 'Provide a detailed explanation of this code, including how it works, what each part does, and the overall flow.',
+      advanced: 'Provide an advanced technical explanation covering algorithms, complexity, design patterns, and optimization strategies.'
+    }
+    
+    const systemMessage = `You are an expert code educator. ${complexityPrompts[complexity]} Break down the code into digestible sections.`
+    const prompt = `Explain this ${language} code:\n\n\`\`\`${language}\n${code}\n\`\`\``
+    return this.makeRequest(prompt, systemMessage)
+  }
 }
 
 export default new GroqApiService()

@@ -1,9 +1,16 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Code, Sparkles, Bug, TestTube, BarChart3, Zap, ArrowRight, CheckCircle } from 'lucide-react'
+import { Code, Sparkles, Bug, TestTube, BarChart3, Zap, ArrowRight, CheckCircle, RefreshCw, Shield, BookOpen } from 'lucide-react'
 
 const Home = () => {
   const features = [
+    {
+      icon: Zap,
+      title: 'Smart Code Generation',
+      description: 'Generate production-ready code from natural language descriptions',
+      path: '/generate',
+      color: 'from-purple-500 to-pink-500'
+    },
     {
       icon: Code,
       title: 'AI Code Analysis',
@@ -12,18 +19,25 @@ const Home = () => {
       color: 'from-blue-500 to-cyan-500'
     },
     {
-      icon: Sparkles,
-      title: 'Smart Code Generation',
-      description: 'Generate production-ready code from natural language descriptions',
-      path: '/generate',
-      color: 'from-purple-500 to-pink-500'
+      icon: RefreshCw,
+      title: 'Code Refactoring',
+      description: 'Transform code into clean, maintainable, production-ready solutions',
+      path: '/refactor',
+      color: 'from-indigo-500 to-purple-500'
+    },
+    {
+      icon: Shield,
+      title: 'Security Scanner',
+      description: 'Identify and fix security vulnerabilities before deployment',
+      path: '/security',
+      color: 'from-red-500 to-orange-500'
     },
     {
       icon: Bug,
       title: 'Bug Detection',
       description: 'Proactively identify and fix potential bugs before they cause issues',
       path: '/bug-detector',
-      color: 'from-red-500 to-orange-500'
+      color: 'from-orange-500 to-red-500'
     },
     {
       icon: TestTube,
@@ -33,18 +47,18 @@ const Home = () => {
       color: 'from-green-500 to-emerald-500'
     },
     {
+      icon: BookOpen,
+      title: 'Code Explainer',
+      description: 'Understand complex code with simple, clear explanations',
+      path: '/explain',
+      color: 'from-teal-500 to-cyan-500'
+    },
+    {
       icon: BarChart3,
       title: 'Code Metrics',
       description: 'Track code quality, complexity, and performance metrics',
       path: '/metrics',
       color: 'from-indigo-500 to-blue-500'
-    },
-    {
-      icon: Zap,
-      title: 'Real-time Suggestions',
-      description: 'Get instant code improvements as you write',
-      path: '/analyze',
-      color: 'from-yellow-500 to-amber-500'
     }
   ]
 
@@ -117,7 +131,7 @@ const Home = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => {
             const Icon = feature.icon
             return (

@@ -6,6 +6,9 @@ import CodeAnalyzer from './pages/CodeAnalyzer'
 import CodeGenerator from './pages/CodeGenerator'
 import BugDetector from './pages/BugDetector'
 import TestGenerator from './pages/TestGenerator'
+import CodeRefactor from './pages/CodeRefactor'
+import SecurityScanner from './pages/SecurityScanner'
+import CodeExplain from './pages/CodeExplain'
 import Metrics from './pages/Metrics'
 
 // Layout component to wrap routes with Navbar
@@ -42,6 +45,9 @@ const router = createBrowserRouter([
       { path: 'generate', element: <CodeGenerator /> },
       { path: 'bug-detector', element: <BugDetector /> },
       { path: 'test-generator', element: <TestGenerator /> },
+      { path: 'refactor', element: <CodeRefactor /> },
+      { path: 'security', element: <SecurityScanner /> },
+      { path: 'explain', element: <CodeExplain /> },
       { path: 'metrics', element: <Metrics /> },
     ],
   },

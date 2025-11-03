@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Code, Sparkles, Zap } from 'lucide-react'
+import { Code, Sparkles, Zap, RefreshCw, Shield, BookOpen, BarChart3 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 const Navbar = () => {
@@ -7,11 +7,14 @@ const Navbar = () => {
 
   const navItems = [
     { path: '/', label: 'Home', icon: Sparkles },
-    { path: '/analyze', label: 'Analyze', icon: Code },
     { path: '/generate', label: 'Generate', icon: Zap },
+    { path: '/analyze', label: 'Analyze', icon: Code },
+    { path: '/refactor', label: 'Refactor', icon: RefreshCw },
+    { path: '/security', label: 'Security', icon: Shield },
     { path: '/bug-detector', label: 'Bugs', icon: Code },
     { path: '/test-generator', label: 'Tests', icon: Code },
-    { path: '/metrics', label: 'Metrics', icon: Code },
+    { path: '/explain', label: 'Explain', icon: BookOpen },
+    { path: '/metrics', label: 'Metrics', icon: BarChart3 },
   ]
 
   return (
@@ -29,7 +32,7 @@ const Navbar = () => {
             </div>
           </Link>
 
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-1 overflow-x-auto scrollbar-hide">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
@@ -38,19 +41,19 @@ const Navbar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="relative"
+                  className="relative flex-shrink-0"
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center space-x-2 px-3 md:px-4 py-2 rounded-lg transition-all duration-200 ${
                       isActive
                         ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'
                         : 'text-gray-300 hover:bg-slate-700/50 hover:text-white'
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
-                    <span className="font-medium hidden md:inline">{item.label}</span>
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-medium text-sm md:text-base whitespace-nowrap">{item.label}</span>
                   </motion.div>
                 </Link>
               )
